@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     Node *node = expr();
 
     printf(".intel_syntax noprefix\n");
-    printf(".globl main\n");
+    printf(".global main\n");
     printf("main:\n");
 
     gen(node);
