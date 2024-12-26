@@ -42,6 +42,15 @@ bool consume(char *op)
     return true;
 }
 
+Token *consume_ident()
+{
+    if (token->kind != TK_IDENT)
+        return NULL;
+    Token *t = token;
+    token = token->next;
+    return t;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op)
@@ -107,7 +116,7 @@ Token *tokenize()
             continue;
         }
 
-        if (strchr("+-*/()<>", *p))
+        if (strchr("+-*/()<>=;", *p))
         {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
@@ -119,6 +128,13 @@ Token *tokenize()
             char *q = p;
             cur->val = strtol(p, &p, 10);
             cur->len = p - q;
+            continue;
+        }
+
+        if ('a' <= *p && *p <= 'z')
+        {
+            cur = new_token(TK_IDENT, cur, p++, 1);
+            cur->len = 1;
             continue;
         }
 
@@ -157,12 +173,7 @@ Node *add();
 Node *mul();
 Node *primary();
 Node *unary();
-
-// expr = equality
-Node *expr()
-{
-    return equality();
-}
+Node *assign();
 
 // equality = relational ("==" relational | "!=" relational)*
 Node *equality()
@@ -232,7 +243,7 @@ Node *mul()
     }
 }
 
-// primary = num | "(" expr ")"
+// primary = num | ident | "(" expr ")"
 Node *primary()
 {
     // 次のトークンが"("なら、"(" expr ")"のはず
@@ -240,6 +251,13 @@ Node *primary()
     {
         Node *node = expr();
         expect(")");
+        return node;
+    }
+    Token *tok = consume_ident();
+    if (tok)
+    {
+        Node *node = new_node(ND_LVAR, NULL, NULL);
+        node->offset = (tok->str[0] - 'a' + 1) * 8;
         return node;
     }
 
@@ -255,4 +273,38 @@ Node *unary()
     if (consume("-"))
         return new_node(ND_SUB, new_node_num(0), unary());
     return primary();
+}
+
+Node *code[100];
+
+// assign  = equality ("=" assign)?
+Node *assign()
+{
+    Node *node = equality();
+    if (consume("="))
+        node = new_node(ND_ASSIGN, node, assign());
+    return node;
+}
+
+// expr = assign
+Node *expr()
+{
+    return assign();
+}
+
+// stmt = expr ";"
+Node *stmt()
+{
+    Node *node = expr();
+    expect(";");
+    return node;
+}
+
+// program = stmt*
+void program()
+{
+    int i = 0;
+    while (!at_eof())
+        code[i++] = stmt();
+    code[i] = NULL;
 }
