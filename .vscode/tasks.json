@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "docker run --rm -v $HOME/9cc:/9cc -w /9cc compilerbook make",
+			"command": "make",
 			"problemMatcher": [],
 			"label": "build",
 			"group": {
@@ -13,7 +13,7 @@
 		},
 		{
 			"type": "shell",
-			"command": "docker run --rm -v $HOME/9cc:/9cc -w /9cc compilerbook make test",
+			"command": "make test",
 			"problemMatcher": [],
 			"label": "test",
 			"group": {
