@@ -22,8 +22,6 @@ struct Token
 extern char *user_input;
 extern Token *token;
 
-void error(char *fmt, ...);
-void error_at(char *loc, char *fmt, ...);
 Token *tokenize();
 
 typedef enum

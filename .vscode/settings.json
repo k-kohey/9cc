@@ -2,6 +2,7 @@
   "makefile.configureOnOpen": false,
   "files.associations": {
     "stdarg.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "stdbool.h": "c"
   }
 }
