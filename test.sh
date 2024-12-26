@@ -52,5 +52,8 @@ assert 3 'a=1; a+2;'
 assert 8 'a=3; z=5; a+z;'
 assert 3 'hoge=1; hoge+2;'
 assert 2 'hoge=3; fuga=1; hoge-fuga;'
+assert 2 'return 2;'
+assert 3 'return a=3;'
+assert 4 'hoge=3; fuga=1; hoge+fuga;'
 
 echo OK

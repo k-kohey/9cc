@@ -14,6 +14,14 @@ bool consume(char *op)
     return true;
 }
 
+bool consume_return()
+{
+    if (token->kind != TK_RETURN)
+        return false;
+    token = token->next;
+    return true;
+}
+
 Token *consume_ident()
 {
     if (token->kind != TK_IDENT)
@@ -152,7 +160,6 @@ Node *primary()
         }
         else
         {
-            log("create new lvar");
             lvar = calloc(1, sizeof(LVar));
             lvar->next = locals;
             lvar->name = tok->str;
@@ -195,11 +202,22 @@ Node *expr()
     return assign();
 }
 
-// stmt = expr ";"
+// stmt = expr ";" | "return" expr ";"
 Node *stmt()
 {
-    Node *node = expr();
-    expect(";");
+    Node *node;
+
+    if (consume_return())
+    {
+        node = new_node(ND_RETURN, expr(), NULL);
+    }
+    else
+    {
+        node = expr();
+    }
+
+    if (!consume(";"))
+        error_at(token->str, "';'ではないトークンです");
     return node;
 }
 

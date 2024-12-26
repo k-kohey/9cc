@@ -35,6 +35,13 @@ void gen(Node *node)
         printf("  mov [rax], rdi\n");
         printf("  push rdi\n");
         return;
+    case ND_RETURN:
+        gen(node->lhs);
+        printf("  pop rax\n");
+        printf("  mov rsp, rbp\n");
+        printf("  pop rbp\n");
+        printf("  ret\n");
+        return;
     }
 
     gen(node->lhs);
@@ -91,6 +98,7 @@ void codegen()
 
     // プロローグ
     // 変数26個分の領域を確保する
+    // TODO: 固定長の領域を確保するのではなくLVarの数から必要な領域を計算する
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
     printf("  sub rsp, 208\n");
