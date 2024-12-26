@@ -3,6 +3,7 @@
   "files.associations": {
     "stdarg.h": "c",
     "string.h": "c",
-    "stdbool.h": "c"
+    "stdbool.h": "c",
+    "type_traits": "c"
   }
 }

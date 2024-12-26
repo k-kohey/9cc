@@ -12,6 +12,8 @@ assert() {
     echo "✅️ $input => $actual"
   else
     echo "❌️ $input => $expected expected, but got $actual"
+    echo "log:"
+    cat log.txt
     exit 1
   fi
 }
@@ -48,5 +50,7 @@ assert 0 '1>=2;'
 
 assert 3 'a=1; a+2;'
 assert 8 'a=3; z=5; a+z;'
+assert 3 'hoge=1; hoge+2;'
+assert 2 'hoge=3; fuga=1; hoge-fuga;'
 
 echo OK

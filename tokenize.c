@@ -33,7 +33,7 @@ void expect(char *op)
     if (token->kind != TK_RESERVED ||
         strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
-        error_at(token->str, "'%c'ではありません", op);
+        error_at(token->str, "'%s'ではありません", op);
     token = token->next;
 }
 
@@ -66,6 +66,17 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len)
 bool startswith(char *p, char *q)
 {
     return memcmp(p, q, strlen(q)) == 0;
+}
+
+// Returns true if c is valid as the first character of an identifier.
+static bool is_ident1(char c)
+{
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_';
+}
+// Returns true if c is valid as a non-first character of an identifier.
+static bool is_ident2(char c)
+{
+    return is_ident1(c) || ('0' <= c && c <= '9');
 }
 
 Token *tokenize()
@@ -106,10 +117,14 @@ Token *tokenize()
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z')
+        if (is_ident1(*p))
         {
-            cur = new_token(TK_IDENT, cur, p++, 1);
-            cur->len = 1;
+            char *start = p;
+            do
+            {
+                p++;
+            } while (is_ident2(*p));
+            cur = new_token(TK_IDENT, cur, start, p - start);
             continue;
         }
 

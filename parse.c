@@ -117,6 +117,18 @@ Node *mul()
     }
 }
 
+LVar *locals;
+
+LVar *find_lvar(Token *tok)
+{
+    for (LVar *var = locals; var; var = var->next)
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+        {
+            return var;
+        }
+    return NULL;
+}
+
 // primary = num | ident | "(" expr ")"
 Node *primary()
 {
@@ -130,8 +142,25 @@ Node *primary()
     Token *tok = consume_ident();
     if (tok)
     {
-        Node *node = new_node(ND_LVAR, NULL, NULL);
-        node->offset = (tok->str[0] - 'a' + 1) * 8;
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar)
+        {
+            node->offset = lvar->offset;
+        }
+        else
+        {
+            log("create new lvar");
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = (locals ? locals->offset : 0) + 8;
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
 

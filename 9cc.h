@@ -19,6 +19,19 @@ struct Token
     int len;        // トークンの長さ
 };
 
+typedef struct LVar LVar;
+
+// ローカル変数の型
+struct LVar
+{
+    LVar *next; // 次の変数かNULL
+    char *name; // 変数の名前
+    int len;    // 名前の長さ
+    int offset; // RBPからのオフセット
+};
+
+extern LVar *locals;
+
 extern char *user_input;
 extern Token *token;
 
@@ -55,3 +68,9 @@ struct Node
 extern Node *code[100];
 void program();
 void codegen();
+
+// log
+void init_log();
+void log(const char *fmt, ...);
+void log_tokens(Token *token);
+void log_nodes(Node *nodes[]);
