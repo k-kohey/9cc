@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include "9cc.h"
 
+extern LVar *locals;
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char *op)

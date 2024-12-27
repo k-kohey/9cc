@@ -39,8 +39,6 @@ struct Function
     int stack_size;
 };
 
-extern LVar *locals;
-
 extern char *user_input;
 extern Token *token;
 
