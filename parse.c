@@ -222,10 +222,13 @@ Node *stmt()
 }
 
 // program = stmt*
-void program()
+Function *parse()
 {
+    Function *prog = calloc(1, sizeof(Function));
     int i = 0;
     while (!at_eof())
-        code[i++] = stmt();
-    code[i] = NULL;
+        prog->body[i++] = stmt();
+    prog->body[i] = NULL;
+    prog->locals = locals;
+    return prog;
 }

@@ -1,5 +1,10 @@
 #define _POSIX_C_SOURCE 200809L
 
+typedef struct Token Token;
+typedef struct Node Node;
+typedef struct LVar LVar;
+typedef struct Function Function;
+
 typedef enum
 {
     TK_RESERVED, // 記号
@@ -8,8 +13,6 @@ typedef enum
     TK_EOF,      // 入力の終わりを表すトークン
     TK_RETURN,   // return
 } TokenKind;
-
-typedef struct Token Token;
 
 struct Token
 {
@@ -20,8 +23,6 @@ struct Token
     int len;        // トークンの長さ
 };
 
-typedef struct LVar LVar;
-
 // ローカル変数の型
 struct LVar
 {
@@ -29,6 +30,13 @@ struct LVar
     char *name; // 変数の名前
     int len;    // 名前の長さ
     int offset; // RBPからのオフセット
+};
+
+struct Function
+{
+    Node *body[100];
+    LVar *locals;
+    int stack_size;
 };
 
 extern LVar *locals;
@@ -55,8 +63,6 @@ typedef enum
 
 } NodeKind;
 
-typedef struct Node Node;
-
 // 抽象構文木のノードの型
 struct Node
 {
@@ -67,9 +73,8 @@ struct Node
     int offset;    // kindがND_LVARの場合のみ使う
 };
 
-extern Node *code[100];
-void program();
-void codegen();
+Function *parse();
+void codegen(Function *prog);
 
 // log
 void init_log();
