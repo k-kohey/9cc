@@ -1,5 +1,21 @@
 #include "9cc.h"
 
+static int align_to(int n, int align)
+{
+    return (n + align - 1) / align * align;
+}
+
+static void assign_lvar_offsets(Function *prog)
+{
+    int offset = 0;
+    for (LVar *var = prog->locals; var; var = var->next)
+    {
+        offset += 8;
+        var->offset = -offset;
+    }
+    prog->stack_size = align_to(offset, 16);
+}
+
 void gen_lval(Node *node)
 {
     if (node->kind != ND_LVAR)
@@ -92,16 +108,15 @@ void gen(Node *node)
 
 void codegen(Function *prog)
 {
+    assign_lvar_offsets(prog);
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
     printf("main:\n");
 
     // プロローグ
-    // 変数26個分の領域を確保する
-    // TODO: 固定長の領域を確保するのではなくLVarの数から必要な領域を計算する
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");
+    printf("  sub rsp, %d\n", prog->stack_size);
 
     for (int i = 0; prog->body[i]; i++)
     {
