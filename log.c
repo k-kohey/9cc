@@ -104,6 +104,12 @@ void log_node(Node *node)
     case ND_LVAR:
         log("  Node kind: ND_LVAR, offset: %d", node->offset);
         break;
+    case ND_BLOCK:
+        log("  Node kind: ND_BLOCK, body: %p", node->body);
+        break;
+    case ND_RETURN:
+        log("  Node kind: ND_RETURN");
+        break;
     default:
         log("  Node kind: unknown");
         break;

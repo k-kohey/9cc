@@ -58,6 +58,8 @@ Node *mul();
 Node *primary();
 Node *unary();
 Node *assign();
+Node *stmt();
+Node *compound_stmt();
 
 // equality = relational ("==" relational | "!=" relational)*
 Node *equality()
@@ -204,14 +206,32 @@ Node *expr()
     return assign();
 }
 
-// stmt = expr ";" | "return" expr ";"
+// compound-stmt = stmt* "}"
+Node *compound_stmt()
+{
+    Node *node = new_node(ND_BLOCK, NULL, NULL);
+    int i = 0;
+    while (!consume("}"))
+    {
+        node->body[i++] = stmt();
+    }
+    node->body[i] = NULL;
+    return node;
+}
+
+// stmt = expr ";" | "return" expr ";"  | "{" compound-stmt
 Node *stmt()
 {
     Node *node;
 
     if (consume_return())
     {
-        node = new_node(ND_RETURN, expr(), NULL);
+        Node *n = expr();
+        node = new_node(ND_RETURN, n, NULL);
+    }
+    else if (consume("{"))
+    {
+        return compound_stmt();
     }
     else
     {
@@ -226,11 +246,13 @@ Node *stmt()
 // program = stmt*
 Function *parse()
 {
+    consume("{");
     Function *prog = calloc(1, sizeof(Function));
-    int i = 0;
-    while (!at_eof())
-        prog->body[i++] = stmt();
-    prog->body[i] = NULL;
+    Node *stmts = compound_stmt();
+    for (int i = 0; stmts->body[i]; i++)
+    {
+        prog->body[i] = stmts->body[i];
+    }
     prog->locals = locals;
     return prog;
 }

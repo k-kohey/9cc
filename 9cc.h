@@ -58,17 +58,19 @@ typedef enum
     ND_ASSIGN, // =
     ND_LVAR,   // ローカル変数
     ND_RETURN,
+    ND_BLOCK, // { ... }
 
 } NodeKind;
 
 // 抽象構文木のノードの型
 struct Node
 {
-    NodeKind kind; // ノードの型
-    Node *lhs;     // 左辺
-    Node *rhs;     // 右辺
-    int val;       // kindがND＿NUMの場合のみ使う
-    int offset;    // kindがND_LVARの場合のみ使う
+    NodeKind kind;   // ノードの型
+    Node *lhs;       // 左辺
+    Node *rhs;       // 右辺
+    int val;         // kindがND＿NUMの場合のみ使う
+    int offset;      // kindがND_LVARの場合のみ使う
+    Node *body[100]; // kindがND_BLOCKの場合のみ使う
 };
 
 Function *parse();
