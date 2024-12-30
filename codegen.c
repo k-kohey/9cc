@@ -16,6 +16,12 @@ static void assign_lvar_offsets(Function *prog)
     prog->stack_size = align_to(offset, 16);
 }
 
+static int count(void)
+{
+    static int i = 1;
+    return i++;
+}
+
 void gen_lval(Node *node)
 {
     if (node->kind != ND_LVAR)
@@ -30,7 +36,7 @@ void gen_lval(Node *node)
 
 void gen(Node *node)
 {
-
+    log("  gen node (type is %d)", node->kind);
     switch (node->kind)
     {
     case ND_NUM:
@@ -63,6 +69,19 @@ void gen(Node *node)
         {
             gen(node->body[i]);
         }
+        return;
+    case ND_IF:
+        int c = count();
+        gen(node->cond);
+        printf("  pop rax\n");
+        printf("  cmp rax, 0\n");
+        printf("  je  .L.else.%d\n", c);
+        gen(node->then);
+        printf("  jmp .L.end.%d\n", c);
+        printf(".L.else.%d:\n", c);
+        if (node->els)
+            gen(node->els);
+        printf(".L.end.%d:\n", c);
         return;
     }
 
@@ -114,6 +133,7 @@ void gen(Node *node)
 
 void codegen(Function *prog)
 {
+    log("Start codegen:");
     assign_lvar_offsets(prog);
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");

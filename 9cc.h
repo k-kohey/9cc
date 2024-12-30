@@ -39,6 +39,7 @@ struct Function
     int stack_size;
 };
 
+void expect(char *op);
 extern char *user_input;
 extern Token *token;
 
@@ -59,7 +60,7 @@ typedef enum
     ND_LVAR,   // ローカル変数
     ND_RETURN,
     ND_BLOCK, // { ... }
-
+    ND_IF,
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -71,6 +72,9 @@ struct Node
     int val;         // kindがND＿NUMの場合のみ使う
     int offset;      // kindがND_LVARの場合のみ使う
     Node *body[100]; // kindがND_BLOCKの場合のみ使う
+    Node *cond;      // kindがND_IFの場合のみ使う
+    Node *then;      // kindがND_IFの場合のみ使う
+    Node *els;       // kindがND_IFの場合のみ使う
 };
 
 Function *parse();

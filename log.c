@@ -110,6 +110,15 @@ void log_node(Node *node)
     case ND_RETURN:
         log("  Node kind: ND_RETURN");
         break;
+    case ND_IF:
+        log("  Node kind: ND_IF");
+        log("  Condition:");
+        log_node(node->cond);
+        log("  Then:");
+        log_node(node->then);
+        log("  Else:");
+        log_node(node->els);
+        break;
     default:
         log("  Node kind: unknown");
         break;

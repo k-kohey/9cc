@@ -219,7 +219,7 @@ Node *compound_stmt()
     return node;
 }
 
-// stmt = expr ";" | "return" expr ";"  | "{" compound-stmt
+// stmt = expr ";" | "return" expr ";"  | "{" compound-stmt | | "if" "(" expr ")" stmt ("else" stmt)?
 Node *stmt()
 {
     Node *node;
@@ -228,6 +228,17 @@ Node *stmt()
     {
         Node *n = expr();
         node = new_node(ND_RETURN, n, NULL);
+    }
+    else if (consume("if"))
+    {
+        Node *node = new_node(ND_IF, NULL, NULL);
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        if (consume("else"))
+            node->els = stmt();
+        return node;
     }
     else if (consume("{"))
     {
