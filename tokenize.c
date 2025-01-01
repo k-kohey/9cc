@@ -123,6 +123,13 @@ Token *tokenize()
             continue;
         }
 
+        if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3]))
+        {
+            cur = new_token(TK_RESERVED, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
         if (is_ident1(*p))
         {
             char *start = p;

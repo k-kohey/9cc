@@ -119,6 +119,18 @@ void log_node(Node *node)
         log("  Else:");
         log_node(node->els);
         break;
+    case ND_FOR:
+        log("  Node kind: ND_FOR");
+        log("  Init:");
+        if (node->init)
+            log_node(node->init);
+        log("  Condition:");
+        if (node->cond)
+            log_node(node->cond);
+        log("  Increment:");
+        if (node->inc)
+            log_node(node->inc);
+        break;
     default:
         log("  Node kind: unknown");
         break;

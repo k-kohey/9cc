@@ -61,6 +61,7 @@ typedef enum
     ND_RETURN,
     ND_BLOCK, // { ... }
     ND_IF,
+    ND_FOR,
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -72,9 +73,13 @@ struct Node
     int val;         // kindがND＿NUMの場合のみ使う
     int offset;      // kindがND_LVARの場合のみ使う
     Node *body[100]; // kindがND_BLOCKの場合のみ使う
-    Node *cond;      // kindがND_IFの場合のみ使う
-    Node *then;      // kindがND_IFの場合のみ使う
-    Node *els;       // kindがND_IFの場合のみ使う
+
+    // kindがND_IFかFORの場合のみ使う
+    Node *cond;
+    Node *then;
+    Node *els;
+    Node *init;
+    Node *inc;
 };
 
 Function *parse();

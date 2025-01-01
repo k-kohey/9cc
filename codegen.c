@@ -71,6 +71,7 @@ void gen(Node *node)
         }
         return;
     case ND_IF:
+    {
         int c = count();
         gen(node->cond);
         printf("  pop rax\n");
@@ -83,6 +84,27 @@ void gen(Node *node)
             gen(node->els);
         printf(".L.end.%d:\n", c);
         return;
+    }
+    case ND_FOR:
+    {
+        int c = count();
+        if (node->init)
+            gen(node->init);
+        printf(".L.begin.%d:\n", c);
+        if (node->cond)
+        {
+            gen(node->cond);
+            printf("  pop rax\n");
+            printf("  cmp rax, 0\n");
+            printf("  je  .L.end.%d\n", c);
+        }
+        gen(node->then);
+        if (node->inc)
+            gen(node->inc);
+        printf("  jmp .L.begin.%d\n", c);
+        printf(".L.end.%d:\n", c);
+        return;
+    }
     }
 
     gen(node->lhs);
