@@ -224,6 +224,7 @@ Node *compound_stmt()
 // | "{" compound-stmt |
 // | "if" "(" expr ")" stmt ("else" stmt)?
 // | "for" "(" expr-stmt expr? ";" expr? ")" stmt
+// | "while" "(" expr ")" stmt
 Node *stmt()
 {
     Node *node;
@@ -268,6 +269,15 @@ Node *stmt()
 
         node->then = stmt();
 
+        return node;
+    }
+    else if (consume("while"))
+    {
+        Node *node = new_node(ND_FOR, NULL, NULL);
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
         return node;
     }
     else if (consume("{"))
