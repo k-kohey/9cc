@@ -42,7 +42,7 @@ void gen_lval(Node *node)
 
 void gen(Node *node)
 {
-    printf("# gen node (type is %d)\n", node->kind);
+    printf("# start gen node (type is %d)\n", node->kind);
     switch (node->kind)
     {
     case ND_NUM:
@@ -173,6 +173,7 @@ void gen(Node *node)
     }
 
     printf("  push rax\n");
+    printf("# end gen node (type is %d)\n", node->kind);
 }
 
 void codegen(Function *prog)
@@ -185,11 +186,18 @@ void codegen(Function *prog)
         printf(".global %s\n", fn->name);
         printf("%s:\n", fn->name);
         current_fn = fn;
+        log_function(fn);
 
         // プロローグ
         printf("  push rbp\n");
         printf("  mov rbp, rsp\n");
         printf("  sub rsp, %d\n", fn->stack_size);
+
+        int i = 0;
+        for (LVar *var = fn->params; var; var = var->next)
+        {
+            printf("  mov [rbp%d], %s\n", var->offset, argreg[i++]);
+        }
 
         for (int i = 0; fn->body[i]; i++)
         {

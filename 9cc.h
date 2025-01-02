@@ -35,6 +35,7 @@ struct LVar
 struct Function
 {
     Function *next;
+    LVar *params;
     char *name;
     Node *body[100];
     LVar *locals;
@@ -96,4 +97,5 @@ void init_log();
 void log(const char *fmt, ...);
 void log_tokens(Token *token);
 void log_nodes(Node *nodes[]);
+void log_function(Function *fn);
 void error_at(char *loc, char *fmt, ...);

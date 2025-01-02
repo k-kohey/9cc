@@ -171,6 +171,15 @@ Node *funcall(Token *tok)
     return node;
 }
 
+LVar *push_lvar(Token *tk, LVar *next)
+{
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->next = next;
+    lvar->name = tk->str;
+    lvar->len = tk->len;
+    lvar->offset = (next ? next->offset : 0) + 8;
+}
+
 // primary = "(" expr ")" | funcall | num
 Node *primary()
 {
@@ -198,13 +207,8 @@ Node *primary()
         }
         else
         {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->len = tok->len;
-            lvar->offset = (locals ? locals->offset : 0) + 8;
-            node->offset = lvar->offset;
-            locals = lvar;
+            locals = push_lvar(tok, locals);
+            node->offset = locals->offset;
         }
         return node;
     }
@@ -328,14 +332,30 @@ Node *stmt()
     return node;
 }
 
-// function = ident "(" ")" "{" stmt* "}"
+// fun_arg = "(" (ident ("," ident)*)? ")"
+LVar *fun_arg()
+{
+    expect("(");
+    while (!consume(")"))
+    {
+        Token *tok = consume_ident();
+        if (tok)
+            locals = push_lvar(tok, locals);
+        else
+            error_at(token->str, "仮引数ではありません");
+
+        consume(",");
+    }
+    return locals;
+}
+
+// function = ident fun_arg "{" stmt* "}"
 Function *function()
 {
     locals = NULL;
     Function *fn = calloc(1, sizeof(Function));
     fn->name = expect_ident();
-    expect("(");
-    expect(")");
+    fn->params = fun_arg();
     expect("{");
     Node *stmts = compound_stmt();
     for (int i = 0; stmts->body[i]; i++)

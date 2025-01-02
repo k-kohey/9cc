@@ -160,3 +160,20 @@ void log_nodes(Node *nodes[])
         log_node(nodes[i]);
     }
 }
+
+void log_function(Function *fn)
+{
+    log("Function:");
+    log("  name: %s", fn->name);
+    log("  stack_size: %d", fn->stack_size);
+    log("  params:");
+    for (LVar *var = fn->params; var; var = var->next)
+    {
+        log("    %s", var->name);
+    }
+    log("  locals:");
+    for (LVar *var = fn->locals; var; var = var->next)
+    {
+        log("    %s", var->name);
+    }
+}
