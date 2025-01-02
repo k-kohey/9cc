@@ -131,6 +131,9 @@ void log_node(Node *node)
         if (node->inc)
             log_node(node->inc);
         break;
+    case ND_FUNCALL:
+        log("  Node kind: ND_FUNCALL, funcname: %s", node->funcname);
+        break;
     default:
         log("  Node kind: unknown");
         break;

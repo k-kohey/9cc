@@ -36,7 +36,7 @@ void gen_lval(Node *node)
 
 void gen(Node *node)
 {
-    log("  gen node (type is %d)", node->kind);
+    printf("# gen node (type is %d)\n", node->kind);
     switch (node->kind)
     {
     case ND_NUM:
@@ -60,9 +60,7 @@ void gen(Node *node)
     case ND_RETURN:
         gen(node->lhs);
         printf("  pop rax\n");
-        printf("  mov rsp, rbp\n");
-        printf("  pop rbp\n");
-        printf("  ret\n");
+        printf("  jmp .Lreturn\n");
         return;
     case ND_BLOCK:
         for (int i = 0; node->body[i]; i++)
@@ -105,6 +103,11 @@ void gen(Node *node)
         printf(".L.end.%d:\n", c);
         return;
     }
+    case ND_FUNCALL:
+        printf("  mov rax, 0\n");
+        printf("  call %s\n", node->funcname);
+        printf("  push rax\n");
+        return;
     }
 
     gen(node->lhs);
@@ -169,11 +172,10 @@ void codegen(Function *prog)
     for (int i = 0; prog->body[i]; i++)
     {
         gen(prog->body[i]);
-        printf("  pop rax\n");
     }
 
     // エピローグ
-    // 最後の式の結果がRAXに残っているのでそれが返り値になる
+    printf(".Lreturn:\n");
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");

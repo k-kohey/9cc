@@ -62,6 +62,7 @@ typedef enum
     ND_BLOCK, // { ... }
     ND_IF,
     ND_FOR,
+    ND_FUNCALL,
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -80,6 +81,8 @@ struct Node
     Node *els;
     Node *init;
     Node *inc;
+
+    char *funcname;
 };
 
 Function *parse();

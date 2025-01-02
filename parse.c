@@ -141,7 +141,8 @@ LVar *find_lvar(Token *tok)
     return NULL;
 }
 
-// primary = num | ident | "(" expr ")"
+// primary = "(" expr ")" | ident args? | num
+// args = "(" ")"
 Node *primary()
 {
     // 次のトークンが"("なら、"(" expr ")"のはず
@@ -154,6 +155,15 @@ Node *primary()
     Token *tok = consume_ident();
     if (tok)
     {
+        if (consume("("))
+        {
+            expect(")");
+            Node *node = new_node(ND_FUNCALL, NULL, NULL);
+            node->funcname = calloc(tok->len + 1, sizeof(char));
+            strncpy(node->funcname, tok->str, tok->len);
+            node->funcname[tok->len] = '\0';
+            return node;
+        }
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
 
