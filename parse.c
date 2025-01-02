@@ -33,6 +33,18 @@ Token *consume_ident()
     return t;
 }
 
+char *expect_ident()
+{
+    Token *tk = consume_ident();
+    if (!tk)
+        error_at(token->str, "識別子ではありません");
+
+    char *s = calloc(tk->len + 1, sizeof(char));
+    strncpy(s, tk->str, tk->len);
+    s[tk->len] = '\0';
+    return s;
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
     Node *node = calloc(1, sizeof(Node));
@@ -316,16 +328,32 @@ Node *stmt()
     return node;
 }
 
+// function = ident "(" ")" "{" stmt* "}"
+Function *function()
+{
+    locals = NULL;
+    Function *fn = calloc(1, sizeof(Function));
+    fn->name = expect_ident();
+    expect("(");
+    expect(")");
+    expect("{");
+    Node *stmts = compound_stmt();
+    for (int i = 0; stmts->body[i]; i++)
+    {
+        fn->body[i] = stmts->body[i];
+    }
+    fn->locals = locals;
+}
+
 // program = stmt*
 Function *parse()
 {
     consume("{");
-    Function *prog = calloc(1, sizeof(Function));
-    Node *stmts = compound_stmt();
-    for (int i = 0; stmts->body[i]; i++)
+    Function head = {};
+    Function *prog = &head;
+    while (!at_eof())
     {
-        prog->body[i] = stmts->body[i];
+        prog = prog->next = function();
     }
-    prog->locals = locals;
-    return prog;
+    return head.next;
 }

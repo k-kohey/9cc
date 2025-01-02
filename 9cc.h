@@ -34,6 +34,8 @@ struct LVar
 
 struct Function
 {
+    Function *next;
+    char *name;
     Node *body[100];
     LVar *locals;
     int stack_size;
