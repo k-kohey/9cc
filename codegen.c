@@ -1,5 +1,7 @@
 #include "9cc.h"
 
+static char *argreg[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+
 static int align_to(int n, int align)
 {
     return (n + align - 1) / align * align;
@@ -104,10 +106,23 @@ void gen(Node *node)
         return;
     }
     case ND_FUNCALL:
+    {
+        int nargs = 0;
+        while (node->args[nargs])
+        {
+            gen(node->args[nargs++]);
+        }
+
+        for (int i = nargs - 1; i >= 0; i--)
+        {
+            printf("  pop %s\n", argreg[i]);
+        }
+
         printf("  mov rax, 0\n");
         printf("  call %s\n", node->funcname);
         printf("  push rax\n");
         return;
+    }
     }
 
     gen(node->lhs);

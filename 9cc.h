@@ -83,6 +83,7 @@ struct Node
     Node *inc;
 
     char *funcname;
+    Node *args[6];
 };
 
 Function *parse();

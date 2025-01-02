@@ -141,8 +141,25 @@ LVar *find_lvar(Token *tok)
     return NULL;
 }
 
-// primary = "(" expr ")" | ident args? | num
-// args = "(" ")"
+// funcall = ident "(" (assign ("," assign)*)? ")"
+Node *funcall(Token *tok)
+{
+    Node *node = new_node(ND_FUNCALL, NULL, NULL);
+    node->funcname = calloc(tok->len + 1, sizeof(char));
+    strncpy(node->funcname, tok->str, tok->len);
+    node->funcname[tok->len] = '\0';
+
+    int i = 0;
+    while (!consume(")"))
+    {
+        node->args[i++] = assign();
+        consume(",");
+    }
+    node->args[i] = NULL;
+    return node;
+}
+
+// primary = "(" expr ")" | funcall | num
 Node *primary()
 {
     // 次のトークンが"("なら、"(" expr ")"のはず
@@ -157,12 +174,7 @@ Node *primary()
     {
         if (consume("("))
         {
-            expect(")");
-            Node *node = new_node(ND_FUNCALL, NULL, NULL);
-            node->funcname = calloc(tok->len + 1, sizeof(char));
-            strncpy(node->funcname, tok->str, tok->len);
-            node->funcname[tok->len] = '\0';
-            return node;
+            return funcall(tok);
         }
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
