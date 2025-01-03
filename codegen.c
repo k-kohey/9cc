@@ -2,6 +2,7 @@
 
 static char *argreg[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
 static Function *current_fn;
+static void gen(Node *node);
 
 static int align_to(int n, int align)
 {
@@ -30,14 +31,19 @@ static int count(void)
 
 void gen_lval(Node *node)
 {
-    if (node->kind != ND_LVAR)
+    switch (node->kind)
     {
-        error("代入の左辺値が変数ではありません");
+    case ND_LVAR:
+        printf("  lea rax, [rbp-%d]\n", node->offset);
+        printf("  push rax\n");
+        return;
+    case ND_DEREF:
+        gen(node->lhs);
+        return;
+    default:
+        error("gen_lval: invalid node");
+        return;
     }
-
-    printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", node->offset);
-    printf("  push rax\n");
 }
 
 void gen(Node *node)
@@ -50,6 +56,15 @@ void gen(Node *node)
         return;
     case ND_LVAR:
         gen_lval(node);
+        printf("  pop rax\n");
+        printf("  mov rax, [rax]\n");
+        printf("  push rax\n");
+        return;
+    case ND_ADDR:
+        gen_lval(node->lhs);
+        return;
+    case ND_DEREF:
+        gen(node->lhs);
         printf("  pop rax\n");
         printf("  mov rax, [rax]\n");
         printf("  push rax\n");

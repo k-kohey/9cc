@@ -60,6 +60,8 @@ typedef enum
     ND_LT,     // <
     ND_LE,     // <=
     ND_ASSIGN, // =
+    ND_ADDR,   // 単項&
+    ND_DEREF,  // 単項*
     ND_LVAR,   // ローカル変数
     ND_RETURN,
     ND_BLOCK, // { ... }
