@@ -19,6 +19,7 @@ int main(int argc, char **argv)
     log_tokens(token);
     Function *prog = parse();
     log_nodes(prog->body);
+    add_type(prog);
     codegen(prog);
 
     return 0;

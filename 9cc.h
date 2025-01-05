@@ -1,7 +1,10 @@
+#include <stdbool.h>
+
 #define _POSIX_C_SOURCE 200809L
 
 typedef struct Token Token;
 typedef struct Node Node;
+typedef struct Type Type;
 typedef struct LVar LVar;
 typedef struct Function Function;
 
@@ -73,12 +76,14 @@ typedef enum
 // 抽象構文木のノードの型
 struct Node
 {
-    NodeKind kind;   // ノードの型
-    Node *lhs;       // 左辺
-    Node *rhs;       // 右辺
-    int val;         // kindがND＿NUMの場合のみ使う
-    int offset;      // kindがND_LVARの場合のみ使う
+    NodeKind kind; // ノードの型
+    Node *lhs;     // 左辺
+    Node *rhs;     // 右辺
+    int val;       // kindがND＿NUMの場合のみ使う
+    int offset;    // kindがND_LVARの場合のみ使う
+    // TODO: Nodeを連結リストにする
     Node *body[100]; // kindがND_BLOCKの場合のみ使う
+    Type *ty;        // Type, e.g. int or pointer to int
 
     // kindがND_IFかFORの場合のみ使う
     Node *cond;
@@ -91,6 +96,22 @@ struct Node
     Node *args[6];
 };
 
+typedef enum
+{
+    TY_INT,
+    TY_PTR
+} TypeKind;
+
+struct Type
+{
+    TypeKind kind;
+    Type *base;
+};
+
+extern Type *ty_int;
+
+void add_type(Function *prog);
+
 Function *parse();
 void codegen(Function *prog);
 
@@ -101,3 +122,4 @@ void log_tokens(Token *token);
 void log_nodes(Node *nodes[]);
 void log_function(Function *fn);
 void error_at(char *loc, char *fmt, ...);
+void error(char *fmt, ...);

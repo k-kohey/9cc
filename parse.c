@@ -256,7 +256,8 @@ Node *compound_stmt()
     int i = 0;
     while (!consume("}"))
     {
-        node->body[i++] = stmt();
+        node->body[i] = stmt();
+        i++;
     }
     node->body[i] = NULL;
     return node;
