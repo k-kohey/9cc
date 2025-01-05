@@ -177,6 +177,7 @@ LVar *push_lvar(Token *tk, LVar *next)
     lvar->next = next;
     lvar->name = tk->str;
     lvar->len = tk->len;
+    // TODO: codegenでoffsetを計算するように修正する
     lvar->offset = (next ? next->offset : 0) + 8;
 }
 
@@ -369,7 +370,7 @@ Function *function()
     fn->locals = locals;
 }
 
-// program = stmt*
+// program = function*
 Function *parse()
 {
     consume("{");

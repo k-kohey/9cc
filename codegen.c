@@ -211,6 +211,7 @@ void codegen(Function *prog)
         int i = 0;
         for (LVar *var = fn->params; var; var = var->next)
         {
+            // TODO: offsetの正負を見直す
             printf("  mov [rbp%d], %s\n", var->offset, argreg[i++]);
         }
 
