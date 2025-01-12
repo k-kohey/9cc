@@ -96,15 +96,12 @@ assert 7 'main() { return add2(3,4); } add2(x, y) { return x+y; }'
 assert 1 'main() { return sub2(4,3); } sub2(x, y) { return x-y; }'
 assert 55 'main() { return fib(9); } fib(x) { if (x<=1) return 1; return fib(x-1) + fib(x-2); }'
 
-# TODO: Fix
-# compilerbookとローカル変数の配置順が異なっている
-# そのため&x+8は&x-8にしている．同様に&y-8は&y+8にしている
 assert 3 'main() { x=3; return *&x; }'
 assert 3 'main() { x=3; y=&x; z=&y; return **z; }'
-assert 5 'main() { x=3; y=5; return *(&x-1); }'
+assert 5 'main() { x=3; y=5; return *(&x+1); }'
 assert 3 'main() { x=3; y=5; return *(&y-1); }'
 assert 5 'main() { x=3; y=&x; *y=5; return x; }'
-assert 7 'main() { x=3; y=5; *(&x-1)=7; return y; }'
-assert 7 'main() { x=3; y=5; *(&y+1)=7; return x; }'
+assert 7 'main() { x=3; y=5; *(&x+1)=7; return y; }'
+assert 7 'main() { x=3; y=5; *(&y-1)=7; return x; }'
 
 echo OK

@@ -102,7 +102,7 @@ void log_node(Node *node)
         log("  Node kind: ND_ASSIGN");
         break;
     case ND_LVAR:
-        log("  Node kind: ND_LVAR, offset: %d", node->offset);
+        log("  Node kind: ND_LVAR, varname: %s", node->var->name);
         break;
     case ND_BLOCK:
         log("  Node kind: ND_BLOCK, body: %p", node->body);
@@ -167,13 +167,13 @@ void log_function(Function *fn)
     log("  name: %s", fn->name);
     log("  stack_size: %d", fn->stack_size);
     log("  params:");
-    for (LVar *var = fn->params; var; var = var->next)
+    for (VarList *vl = fn->params; vl; vl = vl->next)
     {
-        log("    %s", var->name);
+        log("    %s", vl->var->name);
     }
     log("  locals:");
-    for (LVar *var = fn->locals; var; var = var->next)
+    for (VarList *vl = fn->locals; vl; vl = vl->next)
     {
-        log("    %s", var->name);
+        log("    %s", vl->var->name);
     }
 }

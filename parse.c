@@ -2,7 +2,19 @@
 #include <stdbool.h>
 #include "9cc.h"
 
-extern LVar *locals;
+VarList *locals;
+
+Var *push_var(char *name)
+{
+    Var *var = calloc(1, sizeof(Var));
+    var->name = name;
+
+    VarList *vl = calloc(1, sizeof(VarList));
+    vl->var = var;
+    vl->next = locals;
+    locals = vl;
+    return var;
+}
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
@@ -141,16 +153,35 @@ Node *mul()
     }
 }
 
-LVar *locals;
-
-LVar *find_lvar(Token *tok)
+Var *find_lvar(Token *tok)
 {
-    for (LVar *var = locals; var; var = var->next)
-        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-        {
+    for (VarList *vl = locals; vl; vl = vl->next)
+    {
+        Var *var = vl->var;
+        if (strlen(var->name) == tok->len && !memcmp(tok->str, var->name, tok->len))
             return var;
-        }
+    }
     return NULL;
+}
+
+VarList *read_func_params()
+{
+    if (consume(")"))
+        return NULL;
+
+    VarList *head = calloc(1, sizeof(VarList));
+    head->var = push_var(expect_ident());
+    VarList *cur = head;
+
+    while (!consume(")"))
+    {
+        expect(",");
+        cur->next = calloc(1, sizeof(VarList));
+        cur->next->var = push_var(expect_ident());
+        cur = cur->next;
+    }
+
+    return head;
 }
 
 // funcall = ident "(" (assign ("," assign)*)? ")"
@@ -169,16 +200,6 @@ Node *funcall(Token *tok)
     }
     node->args[i] = NULL;
     return node;
-}
-
-LVar *push_lvar(Token *tk, LVar *next)
-{
-    LVar *lvar = calloc(1, sizeof(LVar));
-    lvar->next = next;
-    lvar->name = tk->str;
-    lvar->len = tk->len;
-    // TODO: codegenでoffsetを計算するように修正する
-    lvar->offset = (next ? next->offset : 0) + 8;
 }
 
 // primary = "(" expr ")" | funcall | num
@@ -201,16 +222,14 @@ Node *primary()
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
 
-        LVar *lvar = find_lvar(tok);
-        if (lvar)
+        Var *var = find_lvar(tok);
+        if (!var)
         {
-            node->offset = lvar->offset;
+            char *s = calloc(tok->len + 1, sizeof(char));
+            strncpy(s, tok->str, tok->len);
+            var = push_var(s);
         }
-        else
-        {
-            locals = push_lvar(tok, locals);
-            node->offset = locals->offset;
-        }
+        node->var = var;
         return node;
     }
 
@@ -338,30 +357,15 @@ Node *stmt()
     return node;
 }
 
-// fun_arg = "(" (ident ("," ident)*)? ")"
-LVar *fun_arg()
-{
-    expect("(");
-    while (!consume(")"))
-    {
-        Token *tok = consume_ident();
-        if (tok)
-            locals = push_lvar(tok, locals);
-        else
-            error_at(token->str, "仮引数ではありません");
-
-        consume(",");
-    }
-    return locals;
-}
-
-// function = ident fun_arg "{" stmt* "}"
+// function = ident "(" params? ")" "{" stmt* "}"
+// params   = ident ("," ident)*
 Function *function()
 {
     locals = NULL;
     Function *fn = calloc(1, sizeof(Function));
     fn->name = expect_ident();
-    fn->params = fun_arg();
+    expect("(");
+    fn->params = read_func_params();
     expect("{");
     Node *stmts = compound_stmt();
     for (int i = 0; stmts->body[i]; i++)

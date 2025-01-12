@@ -14,10 +14,10 @@ static void assign_lvar_offsets(Function *prog)
     for (Function *fn = prog; fn; fn = fn->next)
     {
         int offset = 0;
-        for (LVar *var = fn->locals; var; var = var->next)
+        for (VarList *vl = fn->locals; vl; vl = vl->next)
         {
             offset += 8;
-            var->offset = -offset;
+            vl->var->offset = offset;
         }
         fn->stack_size = align_to(offset, 16);
     }
@@ -34,7 +34,7 @@ void gen_lval(Node *node)
     switch (node->kind)
     {
     case ND_LVAR:
-        printf("  lea rax, [rbp-%d]\n", node->offset);
+        printf("  lea rax, [rbp-%d]\n", node->var->offset);
         printf("  push rax\n");
         return;
     case ND_DEREF:
@@ -213,10 +213,10 @@ void codegen(Function *prog)
         printf("  sub rsp, %d\n", fn->stack_size);
 
         int i = 0;
-        for (LVar *var = fn->params; var; var = var->next)
+        for (VarList *vl = fn->params; vl; vl = vl->next)
         {
-            // TODO: offsetの正負を見直す
-            printf("  mov [rbp%d], %s\n", var->offset, argreg[i++]);
+            Var *var = vl->var;
+            printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
         }
 
         for (int i = 0; fn->body[i]; i++)

@@ -5,7 +5,7 @@
 typedef struct Token Token;
 typedef struct Node Node;
 typedef struct Type Type;
-typedef struct LVar LVar;
+typedef struct Var Var;
 typedef struct Function Function;
 
 typedef enum
@@ -27,21 +27,28 @@ struct Token
 };
 
 // ローカル変数の型
-struct LVar
+typedef struct Var Var;
+struct Var
 {
-    LVar *next; // 次の変数かNULL
-    char *name; // 変数の名前
-    int len;    // 名前の長さ
-    int offset; // RBPからのオフセット
+    char *name; // Variable name
+    Type *ty;   // Type
+    int offset; // Offset from RBP
+};
+
+typedef struct VarList VarList;
+struct VarList
+{
+    VarList *next;
+    Var *var;
 };
 
 struct Function
 {
     Function *next;
-    LVar *params;
+    VarList *params;
     char *name;
     Node *body[100];
-    LVar *locals;
+    VarList *locals;
     int stack_size;
 };
 
@@ -79,8 +86,6 @@ struct Node
     NodeKind kind; // ノードの型
     Node *lhs;     // 左辺
     Node *rhs;     // 右辺
-    int val;       // kindがND＿NUMの場合のみ使う
-    int offset;    // kindがND_LVARの場合のみ使う
     // TODO: Nodeを連結リストにする
     Node *body[100]; // kindがND_BLOCKの場合のみ使う
     Type *ty;        // Type, e.g. int or pointer to int
@@ -94,6 +99,9 @@ struct Node
 
     char *funcname;
     Node *args[6];
+
+    Var *var; // kindがND＿LVARの場合のみ使う
+    int val;  // kindがND＿NUMの場合のみ使う
 };
 
 typedef enum
