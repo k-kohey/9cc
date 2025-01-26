@@ -3,6 +3,15 @@
 #include <stdbool.h>
 #include "9cc.h"
 
+// Returns true if the current token matches a given string.
+Token *peek(char *s)
+{
+    if (token->kind != TK_RESERVED || strlen(s) != token->len ||
+        memcmp(token->str, s, token->len))
+        return NULL;
+    return token;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op)
@@ -134,6 +143,13 @@ Token *tokenize()
         {
             cur = new_token(TK_RESERVED, cur, p, 5);
             p += 5;
+            continue;
+        }
+
+        if (strncmp(p, "int", 3) == 0 && !is_alnum(p[3]))
+        {
+            cur = new_token(TK_RESERVED, cur, p, 3);
+            p += 3;
             continue;
         }
 

@@ -4,10 +4,11 @@
 
 VarList *locals;
 
-Var *push_var(char *name)
+Var *push_var(char *name, Type *ty)
 {
     Var *var = calloc(1, sizeof(Var));
     var->name = name;
+    var->ty = ty;
 
     VarList *vl = calloc(1, sizeof(VarList));
     vl->var = var;
@@ -74,6 +75,15 @@ Node *new_node_num(int val)
     return node;
 }
 
+Node *new_var(Var *var)
+{
+    Node *node = new_node(ND_LVAR, NULL, NULL);
+    node->var = var;
+    return node;
+}
+
+Function *function();
+Node *declaration();
 Node *expr();
 Node *equality();
 Node *relational();
@@ -164,21 +174,36 @@ Var *find_lvar(Token *tok)
     return NULL;
 }
 
+// basetype = "int" "*"*
+Type *basetype()
+{
+    expect("int");
+    Type *ty = int_type();
+    while (consume("*"))
+        ty = pointer_to(ty);
+    return ty;
+}
+
+VarList *read_func_param()
+{
+    VarList *vl = calloc(1, sizeof(VarList));
+    Type *ty = basetype();
+    vl->var = push_var(expect_ident(), ty);
+    return vl;
+}
+
 VarList *read_func_params()
 {
     if (consume(")"))
         return NULL;
 
-    VarList *head = calloc(1, sizeof(VarList));
-    head->var = push_var(expect_ident());
+    VarList *head = read_func_param();
     VarList *cur = head;
 
     while (!consume(")"))
     {
         expect(",");
-        cur->next = calloc(1, sizeof(VarList));
-        cur->next->var = push_var(expect_ident());
-        cur = cur->next;
+        cur->next = read_func_param();
     }
 
     return head;
@@ -224,11 +249,7 @@ Node *primary()
 
         Var *var = find_lvar(tok);
         if (!var)
-        {
-            char *s = calloc(tok->len + 1, sizeof(char));
-            strncpy(s, tok->str, tok->len);
-            var = push_var(s);
-        }
+            error_at(tok->str, "変数が見つかりません");
         node->var = var;
         return node;
     }
@@ -288,6 +309,7 @@ Node *compound_stmt()
 // | "if" "(" expr ")" stmt ("else" stmt)?
 // | "for" "(" expr-stmt expr? ";" expr? ")" stmt
 // | "while" "(" expr ")" stmt
+// | declaration
 Node *stmt()
 {
     Node *node;
@@ -296,6 +318,8 @@ Node *stmt()
     {
         Node *n = expr();
         node = new_node(ND_RETURN, n, NULL);
+        expect(";");
+        return node;
     }
     else if (consume("if"))
     {
@@ -347,22 +371,26 @@ Node *stmt()
     {
         return compound_stmt();
     }
+    else if (peek("int"))
+    {
+        return declaration();
+    }
     else
     {
         node = expr();
+        expect(";");
+        return node;
     }
-
-    if (!consume(";"))
-        error_at(token->str, "';'ではないトークンです");
-    return node;
 }
 
-// function = ident "(" params? ")" "{" stmt* "}"
-// params   = ident ("," ident)*
+// function = basetype ident "(" params? ")" "{" stmt* "}"
+// params   = param ("," param)*
+// param    = basetype ident
 Function *function()
 {
     locals = NULL;
     Function *fn = calloc(1, sizeof(Function));
+    basetype();
     fn->name = expect_ident();
     expect("(");
     fn->params = read_func_params();
@@ -373,6 +401,22 @@ Function *function()
         fn->body[i] = stmts->body[i];
     }
     fn->locals = locals;
+}
+
+// declaration = basetype ident ("=" expr)? ";"
+Node *declaration()
+{
+    Type *ty = basetype();
+    Var *var = push_var(expect_ident(), ty);
+    if (consume(";"))
+        return new_node(ND_NULL, NULL, NULL);
+
+    expect("=");
+    Node *lhs = new_var(var);
+    Node *rhs = expr();
+    expect(";");
+    Node *node = new_node(ND_ASSIGN, lhs, rhs);
+    return new_node(ND_EXPR_STMT, node, NULL);
 }
 
 // program = function*

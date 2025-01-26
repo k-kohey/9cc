@@ -52,6 +52,7 @@ struct Function
     int stack_size;
 };
 
+Token *peek(char *s);
 void expect(char *op);
 extern char *user_input;
 extern Token *token;
@@ -78,6 +79,8 @@ typedef enum
     ND_IF,
     ND_FOR,
     ND_FUNCALL,
+    ND_NULL,
+    ND_EXPR_STMT
 } NodeKind;
 
 // 抽象構文木のノードの型
@@ -118,6 +121,8 @@ struct Type
 
 extern Type *ty_int;
 
+Type *int_type();
+Type *pointer_to(Type *base);
 void add_type(Function *prog);
 
 Function *parse();
@@ -128,6 +133,7 @@ void init_log();
 void log(const char *fmt, ...);
 void log_tokens(Token *token);
 void log_nodes(Node *nodes[]);
+void log_node(Node *node);
 void log_function(Function *fn);
 void error_at(char *loc, char *fmt, ...);
 void error(char *fmt, ...);

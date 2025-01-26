@@ -51,8 +51,14 @@ void gen(Node *node)
     printf("# start gen node (type is %d)\n", node->kind);
     switch (node->kind)
     {
+    case ND_NULL:
+        return;
     case ND_NUM:
         printf("  push %d\n", node->val);
+        return;
+    case ND_EXPR_STMT:
+        gen(node->lhs);
+        printf("  add rsp, 8\n");
         return;
     case ND_LVAR:
         gen_lval(node);

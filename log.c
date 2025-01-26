@@ -100,6 +100,10 @@ void log_node(Node *node)
         break;
     case ND_ASSIGN:
         log("  Node kind: ND_ASSIGN");
+        log("  Left-hand side:");
+        log_node(node->lhs);
+        log("  Right-hand side:");
+        log_node(node->rhs);
         break;
     case ND_LVAR:
         log("  Node kind: ND_LVAR, varname: %s", node->var->name);
@@ -109,6 +113,8 @@ void log_node(Node *node)
         break;
     case ND_RETURN:
         log("  Node kind: ND_RETURN");
+        log("  Expression:");
+        log_node(node->lhs);
         break;
     case ND_IF:
         log("  Node kind: ND_IF");
@@ -133,6 +139,14 @@ void log_node(Node *node)
         break;
     case ND_FUNCALL:
         log("  Node kind: ND_FUNCALL, funcname: %s", node->funcname);
+        break;
+    case ND_NULL:
+        log("  Node kind: ND_NULL");
+        break;
+    case ND_EXPR_STMT:
+        log("  Node kind: ND_EXPR_STMT");
+        log("  Expression:");
+        log_node(node->lhs);
         break;
     default:
         log("  Node kind: unknown");
