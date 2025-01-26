@@ -153,6 +153,13 @@ Token *tokenize()
             continue;
         }
 
+        if (strncmp(p, "sizeof", 6) == 0 && !is_alnum(p[6]))
+        {
+            cur = new_token(TK_RESERVED, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (is_ident1(*p))
         {
             char *start = p;

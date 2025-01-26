@@ -1,4 +1,5 @@
 #include "9cc.h"
+#include <stddef.h>
 
 Type *int_type()
 {
@@ -74,6 +75,12 @@ void visit(Node *node)
         if (node->lhs->ty->kind != TY_PTR)
             error("invalid pointer dereference");
         node->ty = node->lhs->ty->base;
+        return;
+    case ND_SIZEOF:
+        node->kind = ND_NUM;
+        node->ty = int_type();
+        node->val = sizeof(node->lhs->ty);
+        node->lhs = NULL;
         return;
     }
 }

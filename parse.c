@@ -46,6 +46,15 @@ Token *consume_ident()
     return t;
 }
 
+Token *consume_sizeof()
+{
+    if (token->kind != TK_RESERVED || token->len != 6 || memcmp(token->str, "sizeof", 6))
+        return NULL;
+    Token *t = token;
+    token = token->next;
+    return t;
+}
+
 char *expect_ident()
 {
     Token *tk = consume_ident();
@@ -227,9 +236,10 @@ Node *funcall(Token *tok)
     return node;
 }
 
-// primary = "(" expr ")" | funcall | num
+// primary = "(" expr ")" | "sizeof" unary | ident func-args? | num
 Node *primary()
 {
+    Token *tok;
     // 次のトークンが"("なら、"(" expr ")"のはず
     if (consume("("))
     {
@@ -237,8 +247,9 @@ Node *primary()
         expect(")");
         return node;
     }
-    Token *tok = consume_ident();
-    if (tok)
+    if (tok = consume_sizeof())
+        return new_node(ND_SIZEOF, unary(), NULL);
+    if (tok = consume_ident())
     {
         if (consume("("))
         {

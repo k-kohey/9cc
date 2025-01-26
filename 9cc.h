@@ -80,7 +80,8 @@ typedef enum
     ND_FOR,
     ND_FUNCALL,
     ND_NULL,
-    ND_EXPR_STMT
+    ND_EXPR_STMT,
+    ND_SIZEOF, // "sizeof"
 } NodeKind;
 
 // 抽象構文木のノードの型
