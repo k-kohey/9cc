@@ -103,6 +103,7 @@ Node *unary();
 Node *assign();
 Node *stmt();
 Node *compound_stmt();
+Node *postfix();
 
 // equality = relational ("==" relational | "!=" relational)*
 Node *equality()
@@ -193,11 +194,23 @@ Type *basetype()
     return ty;
 }
 
+Type *read_type_suffix(Type *base)
+{
+    if (!consume("["))
+        return base;
+    int sz = expect_number();
+    expect("]");
+    base = read_type_suffix(base);
+    return array_of(base, sz);
+}
+
 VarList *read_func_param()
 {
-    VarList *vl = calloc(1, sizeof(VarList));
     Type *ty = basetype();
-    vl->var = push_var(expect_ident(), ty);
+    char *name = expect_ident();
+    ty = read_type_suffix(ty);
+    VarList *vl = calloc(1, sizeof(VarList));
+    vl->var = push_var(name, ty);
     return vl;
 }
 
@@ -269,7 +282,22 @@ Node *primary()
     return new_node_num(expect_number());
 }
 
-// unary   = ("+" | "-" | "*" | "&")? primary
+// postfix = primary ("[" expr "]")*
+Node *postfix()
+{
+    Node *node = primary();
+
+    while (consume("["))
+    {
+        // x[y] is short for *(x+y)
+        Node *exp = new_node(ND_ADD, node, expr());
+        expect("]");
+        node = new_node(ND_DEREF, exp, NULL);
+    }
+    return node;
+}
+
+// unary   = ("+" | "-" | "*" | "&")? unary | postfix
 Node *unary()
 {
     if (consume("+"))
@@ -280,7 +308,7 @@ Node *unary()
         return new_node(ND_ADDR, unary(), NULL);
     if (consume("*"))
         return new_node(ND_DEREF, unary(), NULL);
-    return primary();
+    return postfix();
 }
 
 Node *code[100];
@@ -414,11 +442,13 @@ Function *function()
     fn->locals = locals;
 }
 
-// declaration = basetype ident ("=" expr)? ";"
+// declaration = basetype ident ("[" num "]")* ("=" expr) ";"
 Node *declaration()
 {
     Type *ty = basetype();
-    Var *var = push_var(expect_ident(), ty);
+    char *name = expect_ident();
+    ty = read_type_suffix(ty);
+    Var *var = push_var(name, ty);
     if (consume(";"))
         return new_node(ND_NULL, NULL, NULL);
 

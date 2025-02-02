@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 
 #define _POSIX_C_SOURCE 200809L
@@ -111,13 +112,15 @@ struct Node
 typedef enum
 {
     TY_INT,
-    TY_PTR
+    TY_PTR,
+    TY_ARRAY,
 } TypeKind;
 
 struct Type
 {
     TypeKind kind;
     Type *base;
+    int array_size;
 };
 
 extern Type *ty_int;
@@ -125,6 +128,8 @@ extern Type *ty_int;
 Type *int_type();
 Type *pointer_to(Type *base);
 void add_type(Function *prog);
+Type *array_of(Type *base, int size);
+int size_of(Type *ty);
 
 Function *parse();
 void codegen(Function *prog);

@@ -16,8 +16,9 @@ static void assign_lvar_offsets(Function *prog)
         int offset = 0;
         for (VarList *vl = fn->locals; vl; vl = vl->next)
         {
-            offset += 8;
-            vl->var->offset = offset;
+            Var *var = vl->var;
+            offset += size_of(var->ty);
+            var->offset = offset;
         }
         fn->stack_size = align_to(offset, 16);
     }
@@ -29,7 +30,7 @@ static int count(void)
     return i++;
 }
 
-void gen_lval(Node *node)
+void gen_addr(Node *node)
 {
     switch (node->kind)
     {
@@ -41,9 +42,16 @@ void gen_lval(Node *node)
         gen(node->lhs);
         return;
     default:
-        error("gen_lval: invalid node");
+        error("gen_addr: invalid node");
         return;
     }
+}
+
+void gen_lval(Node *node)
+{
+    if (node->ty->kind == TY_ARRAY)
+        error("not an lvalue");
+    gen_addr(node);
 }
 
 void gen(Node *node)
@@ -61,19 +69,25 @@ void gen(Node *node)
         printf("  add rsp, 8\n");
         return;
     case ND_LVAR:
-        gen_lval(node);
-        printf("  pop rax\n");
-        printf("  mov rax, [rax]\n");
-        printf("  push rax\n");
+        gen_addr(node);
+        if (node->ty->kind != TY_ARRAY)
+        {
+            printf("  pop rax\n");
+            printf("  mov rax, [rax]\n");
+            printf("  push rax\n");
+        }
         return;
     case ND_ADDR:
-        gen_lval(node->lhs);
+        gen_addr(node->lhs);
         return;
     case ND_DEREF:
         gen(node->lhs);
-        printf("  pop rax\n");
-        printf("  mov rax, [rax]\n");
-        printf("  push rax\n");
+        if (node->ty->kind != TY_ARRAY)
+        {
+            printf("  pop rax\n");
+            printf("  mov rax, [rax]\n");
+            printf("  push rax\n");
+        }
         return;
     case ND_ASSIGN:
         gen_lval(node->lhs);
@@ -159,13 +173,13 @@ void gen(Node *node)
     switch (node->kind)
     {
     case ND_ADD:
-        if (node->ty->kind == TY_PTR)
-            printf("  imul rdi, 8\n"); // ポインタの場合はint型分の8バイトを掛ける
+        if (node->ty->base)
+            printf("  imul rdi, %d\n", size_of(node->ty->base));
         printf("  add rax, rdi\n");
         break;
     case ND_SUB:
-        if (node->ty->kind == TY_PTR)
-            printf("  imul rdi, 8\n");
+        if (node->ty->base)
+            printf("  imul rdi, %d\n", size_of(node->ty->base));
         printf("  sub rax, rdi\n");
         break;
     case ND_MUL:
