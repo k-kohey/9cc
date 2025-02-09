@@ -105,9 +105,9 @@ void visit(Node *node)
     }
 }
 
-void add_type(Function *prog)
+void add_type(Program *prog)
 {
-    for (Function *fn = prog; fn; fn = fn->next)
+    for (Function *fn = prog->fns; fn; fn = fn->next)
         for (int i = 0; fn->body[i]; i++)
             visit(fn->body[i]);
 }

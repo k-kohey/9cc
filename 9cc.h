@@ -34,6 +34,7 @@ struct Var
     char *name; // Variable name
     Type *ty;   // Type
     int offset; // Offset from RBP
+    bool is_local;
 };
 
 typedef struct VarList VarList;
@@ -52,6 +53,14 @@ struct Function
     VarList *locals;
     int stack_size;
 };
+
+typedef struct
+{
+    VarList *globals;
+    Function *fns;
+} Program;
+
+Program *program();
 
 Token *peek(char *s);
 void expect(char *op);
@@ -127,12 +136,12 @@ extern Type *ty_int;
 
 Type *int_type();
 Type *pointer_to(Type *base);
-void add_type(Function *prog);
+void add_type(Program *prog);
 Type *array_of(Type *base, int size);
 int size_of(Type *ty);
 
-Function *parse();
-void codegen(Function *prog);
+Program *program();
+void codegen(Program *prog);
 
 // log
 void init_log();

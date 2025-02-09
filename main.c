@@ -17,8 +17,8 @@ int main(int argc, char **argv)
     user_input = argv[1];
     token = tokenize();
     log_tokens(token);
-    Function *prog = parse();
-    log_nodes(prog->body);
+    Program *prog = program();
+    // log_nodes(prog->fns);
     add_type(prog);
     codegen(prog);
 

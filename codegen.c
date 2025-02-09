@@ -9,9 +9,9 @@ static int align_to(int n, int align)
     return (n + align - 1) / align * align;
 }
 
-static void assign_lvar_offsets(Function *prog)
+static void assign_lvar_offsets(Program *prog)
 {
-    for (Function *fn = prog; fn; fn = fn->next)
+    for (Function *fn = prog->fns; fn; fn = fn->next)
     {
         int offset = 0;
         for (VarList *vl = fn->locals; vl; vl = vl->next)
@@ -35,9 +35,20 @@ void gen_addr(Node *node)
     switch (node->kind)
     {
     case ND_LVAR:
-        printf("  lea rax, [rbp-%d]\n", node->var->offset);
-        printf("  push rax\n");
+    {
+        Var *var = node->var;
+        if (var->is_local)
+        {
+            printf("  lea rax, [rbp-%d]\n", node->var->offset);
+            printf("  push rax\n");
+        }
+        else
+        {
+            printf("  lea rax, [rip+%s]\n", var->name);
+            printf("  push rax\n");
+        }
         return;
+    }
     case ND_DEREF:
         gen(node->lhs);
         return;
@@ -215,12 +226,23 @@ void gen(Node *node)
     printf("# end gen node (type is %d)\n", node->kind);
 }
 
-void codegen(Function *prog)
+void emit_data(Program *prog)
 {
-    log("Start codegen:");
-    assign_lvar_offsets(prog);
-    printf(".intel_syntax noprefix\n");
-    for (Function *fn = prog; fn; fn = fn->next)
+    printf(".data\n");
+
+    for (VarList *vl = prog->globals; vl; vl = vl->next)
+    {
+        Var *var = vl->var;
+        printf("%s:\n", var->name);
+        printf("  .zero %d\n", size_of(var->ty));
+    }
+}
+
+void emit_text(Program *prog)
+{
+    printf(".text\n");
+
+    for (Function *fn = prog->fns; fn; fn = fn->next)
     {
         printf(".global %s\n", fn->name);
         printf("%s:\n", fn->name);
@@ -250,4 +272,13 @@ void codegen(Function *prog)
         printf("  pop rbp\n");
         printf("  ret\n");
     }
+}
+
+void codegen(Program *prog)
+{
+    log("Start codegen:");
+    assign_lvar_offsets(prog);
+    printf(".intel_syntax noprefix\n");
+    emit_data(prog);
+    emit_text(prog);
 }
