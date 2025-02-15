@@ -106,7 +106,7 @@ void log_node(Node *node)
         log_node(node->rhs);
         break;
     case ND_LVAR:
-        log("  Node kind: ND_LVAR, varname: %s", node->var->name);
+        log("  Node kind: ND_LVAR, varname: %s, type: %d", node->var->name, node->var->ty->kind);
         break;
     case ND_BLOCK:
         log("  Node kind: ND_BLOCK, body: %p", node->body);
@@ -148,8 +148,23 @@ void log_node(Node *node)
         log("  Expression:");
         log_node(node->lhs);
         break;
+    case ND_SIZEOF:
+        log("  Node kind: ND_SIZEOF");
+        log("  Expression:");
+        log_node(node->lhs);
+        break;
+    case ND_ADDR:
+        log("  Node kind: ND_ADDR");
+        log("  Expression:");
+        log_node(node->lhs);
+        break;
+    case ND_DEREF:
+        log("  Node kind: ND_DEREF");
+        log("  Expression:");
+        log_node(node->lhs);
+        break;
     default:
-        log("  Node kind: unknown");
+        log("  Node kind: unknown %d", node->kind);
         break;
     }
 

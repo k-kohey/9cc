@@ -214,11 +214,20 @@ Var *find_lvar(Token *tok)
     return NULL;
 }
 
-// basetype = "int" "*"*
+// basetype = ("char" | "int") "*"*
 Type *basetype()
 {
-    expect("int");
-    Type *ty = int_type();
+    Type *ty;
+    if (consume("char"))
+    {
+        ty = char_type();
+    }
+    else
+    {
+        expect("int");
+        ty = int_type();
+    }
+
     while (consume("*"))
         ty = pointer_to(ty);
     return ty;
@@ -256,6 +265,7 @@ VarList *read_func_params()
     {
         expect(",");
         cur->next = read_func_param();
+        cur = cur->next;
     }
 
     return head;
@@ -372,6 +382,11 @@ Node *compound_stmt()
     return node;
 }
 
+bool is_typename()
+{
+    return peek("int") || peek("char");
+}
+
 // stmt = expr ";"
 // | "return" expr ";"
 // | "{" compound-stmt |
@@ -440,7 +455,7 @@ Node *stmt()
     {
         return compound_stmt();
     }
-    else if (peek("int"))
+    else if (is_typename())
     {
         return declaration();
     }

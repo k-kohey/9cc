@@ -16,10 +16,13 @@ int main(int argc, char **argv)
     // トークナイズしてパースする
     user_input = argv[1];
     token = tokenize();
-    log_tokens(token);
+    // log_tokens(token);
     Program *prog = program();
-    // log_nodes(prog->fns);
     add_type(prog);
+    // for (int i = 0; i < 100; i++)
+    // {
+    //     log_nodes(prog->fns[i].body);
+    // }
     codegen(prog);
 
     return 0;

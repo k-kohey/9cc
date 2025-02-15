@@ -1,12 +1,13 @@
 #include "9cc.h"
 
-static char *argreg[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
+char *argreg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
+char *argreg8[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 static Function *current_fn;
 static void gen(Node *node);
 
-static int align_to(int n, int align)
+int align_to(int n, int align)
 {
-    return (n + align - 1) / align * align;
+    return (n + align - 1) & ~(align - 1);
 }
 
 static void assign_lvar_offsets(Program *prog)
@@ -20,8 +21,29 @@ static void assign_lvar_offsets(Program *prog)
             offset += size_of(var->ty);
             var->offset = offset;
         }
-        fn->stack_size = align_to(offset, 16);
+        fn->stack_size = align_to(offset, 8);
     }
+}
+
+void load(Type *ty)
+{
+    printf("  pop rax\n");
+    if (size_of(ty) == 1)
+        printf("  movsx rax, byte ptr [rax]\n");
+    else
+        printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
+}
+
+void store(Type *ty)
+{
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+    if (size_of(ty) == 1)
+        printf("  mov [rax], dil\n");
+    else
+        printf("  mov [rax], rdi\n");
+    printf("  push rdi\n");
 }
 
 static int count(void)
@@ -83,9 +105,7 @@ void gen(Node *node)
         gen_addr(node);
         if (node->ty->kind != TY_ARRAY)
         {
-            printf("  pop rax\n");
-            printf("  mov rax, [rax]\n");
-            printf("  push rax\n");
+            load(node->ty);
         }
         return;
     case ND_ADDR:
@@ -95,19 +115,13 @@ void gen(Node *node)
         gen(node->lhs);
         if (node->ty->kind != TY_ARRAY)
         {
-            printf("  pop rax\n");
-            printf("  mov rax, [rax]\n");
-            printf("  push rax\n");
+            load(node->ty);
         }
         return;
     case ND_ASSIGN:
         gen_lval(node->lhs);
         gen(node->rhs);
-
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
-        printf("  mov [rax], rdi\n");
-        printf("  push rdi\n");
+        store(node->ty);
         return;
     case ND_RETURN:
         gen(node->lhs);
@@ -165,7 +179,7 @@ void gen(Node *node)
 
         for (int i = nargs - 1; i >= 0; i--)
         {
-            printf("  pop %s\n", argreg[i]);
+            printf("  pop %s\n", argreg8[i]);
         }
 
         printf("  mov rax, 0\n");
@@ -238,6 +252,20 @@ void emit_data(Program *prog)
     }
 }
 
+void load_arg(Var *var, int idx)
+{
+    int sz = size_of(var->ty);
+    if (sz == 1)
+    {
+        printf("  mov [rbp-%d], %s\n", var->offset, argreg1[idx]);
+    }
+    else
+    {
+        assert(sz == 8);
+        printf("  mov [rbp-%d], %s\n", var->offset, argreg8[idx]);
+    }
+}
+
 void emit_text(Program *prog)
 {
     printf(".text\n");
@@ -257,8 +285,7 @@ void emit_text(Program *prog)
         int i = 0;
         for (VarList *vl = fn->params; vl; vl = vl->next)
         {
-            Var *var = vl->var;
-            printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
+            load_arg(vl->var, i++);
         }
 
         for (int i = 0; fn->body[i]; i++)
